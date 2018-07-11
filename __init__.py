@@ -7,24 +7,24 @@
 # Homepage: https://github.com/simgunz/anki-plugins
 # Report any problem in the github issues section
 
-from PyQt4.QtGui import *
-from PyQt4 import QtCore
-import aqt
-from anki.hooks import addHook
+from types import MethodType
 
-# Set this variable to True to hide all windows on startup, otherwise set it to False
-HIDE_ON_STARTUP = False
+from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    _fromUtf8 = lambda s: s
+from anki import hooks
+from aqt import mw              #mw is the INSTANCE of the main window (aqt/main.py) create in aqt/__init__
+from aqt.main import AnkiQt
 
-def focusChanged(old, now):
+def onFocusChanged(self, old, now):
+    """Keep track of the focused window in order to refocus it on showAll
+    """
     if now == None:
         self.last_focus = old
 
-def showAll():
+def showAll(self):
+    """Show all windows
+    """
     for w in self.tray_hidden:
         if w.isWindow() and w.isHidden():
             w.showNormal()
@@ -34,7 +34,9 @@ def showAll():
     self.anki_visible = True
     self.tray_hidden = []
 
-def hideAll():
+def hideAll(self):
+    """Hide all windows
+    """
     self.tray_hidden = []
     activeWindow = QApplication.activeModalWidget()
     for w in QApplication.topLevelWidgets():
@@ -45,14 +47,18 @@ def hideAll():
             self.tray_hidden.append(w)
     self.anki_visible = False
 
-def trayActivated(reason):
+def trayActivated(self, reason):
+    """Show/hide all Anki windows when the tray icon is clicked
+    """
     if reason == QSystemTrayIcon.Trigger:
         if self.anki_visible:
-            hideAll()
+            self.hideAll()
         else:
-            showAll()
+            self.showAll()
 
-def createSysTray():
+def createSysTray(self):
+    """Create an system tray with the Anki icon
+    """
     # Check if self (i.e., mw.aqt) already has a trayIcon
     if hasattr(self, 'trayIcon'):
         return
@@ -60,45 +66,27 @@ def createSysTray():
     self.last_focus = self
     self.trayIcon = QSystemTrayIcon(self)
     ankiLogo = QIcon()
-    ankiLogo.addPixmap(QPixmap(_fromUtf8(":/icons/anki.png")), QIcon.Normal, QIcon.Off)
+    ankiLogo.addPixmap(QPixmap(":/icons/anki.png"), QIcon.Normal, QIcon.Off)
     self.trayIcon.setIcon(ankiLogo)
     trayMenu = QMenu(self)
     self.trayIcon.setContextMenu(trayMenu)
     trayMenu.addAction(self.form.actionExit)
-    self.connect(self.trayIcon, QtCore.SIGNAL("activated(QSystemTrayIcon::ActivationReason)"), trayActivated)
-    self.connect(self.app, QtCore.SIGNAL("focusChanged(QWidget*,QWidget*)"), focusChanged)
+    self.trayIcon.activated.connect(self.trayActivated)
+    self.app.focusChanged.connect(self.onFocusChanged)
     self.trayIcon.show()
 
-def myOnClose():
-    "Called from a shortcut key. Close current active window."
-    aw = self.app.activeWindow()
-    if not aw or aw == self:
-        self.unloadProfile(browser=False)
-        self.trayIcon.hide()
-        self.app.quit()
-    else:
-        aw.close()
+def minimizeToTrayInit():
+    mw.createSysTray()
+    config = mw.addonManager.getConfig(__name__) # Get addon config
+    if config['hide_on_startup']:
+        mw.hideAll()
 
-def myCloseEvent(event):
-    "User hit the X button"
-    if self.anki_visible:
-        self.col.save()
-        trayActivated(QSystemTrayIcon.Trigger)
-        event.ignore();
-    else:
-        myOnClose()
 
-def setCloseEventAction():
-    self.disconnect(self.form.actionExit, QtCore.SIGNAL("triggered()"), self, QtCore.SLOT("close()"))
-    self.connect(self.form.actionExit, QtCore.SIGNAL("triggered()"), self.onClose)
+# Set Anki main window new methods
+mw.onFocusChanged = MethodType(onFocusChanged, mw) 
+mw.showAll = MethodType(showAll, mw) 
+mw.hideAll = MethodType(hideAll, mw) 
+mw.trayActivated = MethodType(trayActivated, mw) 
+mw.createSysTray = MethodType(createSysTray, mw) 
 
-if __name__ == "__main__":
-    print "Don't run me. I'm a plugin."
-else:
-    self = aqt.mw
-    addHook("profileLoaded", setCloseEventAction)
-    addHook("profileLoaded", createSysTray)
-    if HIDE_ON_STARTUP:
-        addHook("profileLoaded", hideAll)
-    self.closeEvent = myCloseEvent
-    self.onClose = myOnClose
+hooks.addHook("profileLoaded", minimizeToTrayInit)
