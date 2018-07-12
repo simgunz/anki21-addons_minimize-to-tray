@@ -75,6 +75,8 @@ def createSysTray(self):
     self.trayIcon.show()
 
 def minimizeToTrayInit():
+    if hasattr(mw, 'trayIcon'):
+        return
     mw.createSysTray()
     config = mw.addonManager.getConfig(__name__) # Get addon config
     if config['hide_on_startup']:
