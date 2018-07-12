@@ -73,21 +73,42 @@ def createSysTray(self):
     self.trayIcon.activated.connect(self.trayActivated)
     self.app.focusChanged.connect(self.onFocusChanged)
     self.trayIcon.show()
-
+            
+def minimizeToTrayClose(self):
+    self.closeEventFromAction = True
+    self.close()
+        
+def wrapCloseCloseEvent():
+    "Override an existing method of an instnce of an object"
+    def repl(self, event):
+        if not self.closeEventFromAction:
+            #self.col.save()
+            self.trayActivated(QSystemTrayIcon.Trigger)
+            event.ignore();
+            return
+        AnkiQt.closeEvent(self, event)
+    return MethodType(repl, mw)
+    
 def minimizeToTrayInit():
     if hasattr(mw, 'trayIcon'):
         return
+    mw.closeEventFromAction = False
     mw.createSysTray()
+    # Disconnecting from close may have some side effects (e.g. QApplication::lastWindowClosed() signal not emitted)
+    mw.form.actionExit.triggered.disconnect(mw.close)                  
+    mw.form.actionExit.triggered.connect(mw.minimizeToTrayClose)
     config = mw.addonManager.getConfig(__name__) # Get addon config
     if config['hide_on_startup']:
         mw.hideAll()
-
 
 # Set Anki main window new methods
 mw.onFocusChanged = MethodType(onFocusChanged, mw) 
 mw.showAll = MethodType(showAll, mw) 
 mw.hideAll = MethodType(hideAll, mw) 
-mw.trayActivated = MethodType(trayActivated, mw) 
-mw.createSysTray = MethodType(createSysTray, mw) 
+mw.trayActivated = MethodType(trayActivated, mw)
+mw.createSysTray = MethodType(createSysTray, mw)
+
+mw.minimizeToTrayClose = MethodType(minimizeToTrayClose, mw)
+mw.closeEvent = wrapCloseCloseEvent()
 
 hooks.addHook("profileLoaded", minimizeToTrayInit)
