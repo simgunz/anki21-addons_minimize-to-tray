@@ -38,7 +38,6 @@ def hideAll(self):
     """Hide all windows
     """
     self.tray_hidden = []
-    activeWindow = QApplication.activeModalWidget()
     for w in QApplication.topLevelWidgets():
         if w.isWindow() and not w.isHidden():
             if not w.children():
