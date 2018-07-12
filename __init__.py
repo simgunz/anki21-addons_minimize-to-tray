@@ -66,7 +66,7 @@ def createSysTray(self):
     self.trayIcon = QSystemTrayIcon(self)
     ankiLogo = QIcon()
     ankiLogo.addPixmap(QPixmap(":/icons/anki.png"), QIcon.Normal, QIcon.Off)
-    self.trayIcon.setIcon(ankiLogo)
+    self.trayIcon.setIcon(QIcon.fromTheme("anki", ankiLogo))
     trayMenu = QMenu(self)
     self.trayIcon.setContextMenu(trayMenu)
     trayMenu.addAction(self.form.actionExit)
