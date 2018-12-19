@@ -69,6 +69,8 @@ def createSysTray(self):
     self.trayIcon.setIcon(QIcon.fromTheme("anki", ankiLogo))
     trayMenu = QMenu(self)
     self.trayIcon.setContextMenu(trayMenu)
+    showAction = trayMenu.addAction("Show all windows")
+    showAction.triggered.connect(self.showAll)
     trayMenu.addAction(self.form.actionExit)
     self.trayIcon.activated.connect(self.trayActivated)
     self.app.focusChanged.connect(self.onFocusChanged)
