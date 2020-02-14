@@ -43,10 +43,10 @@ class AnkiSystemTray():
         # Disconnecting from close may have some side effects
         # (e.g. QApplication::lastWindowClosed() signal not emitted)
         self.mw.form.actionExit.triggered.disconnect(self.mw.close)
-        self.mw.form.actionExit.triggered.connect(self.onClose)
+        self.mw.form.actionExit.triggered.connect(self.onExit)
         self.mw.closeEvent = self._wrapCloseCloseEvent()
 
-    def trayActivated(self, reason):
+    def onActivated(self, reason):
         """Show/hide all Anki windows when the tray icon is clicked
         """
         if reason == QSystemTrayIcon.Trigger:
@@ -58,7 +58,7 @@ class AnkiSystemTray():
         if now is not None:
             self.last_focus = now
 
-    def onClose(self):
+    def onExit(self):
         self.mw.closeEventFromAction = True
         self.mw.close()
 
@@ -113,7 +113,7 @@ class AnkiSystemTray():
         showAction = trayMenu.addAction("Show all windows")
         showAction.triggered.connect(self.showAll)
         trayMenu.addAction(self.mw.form.actionExit)
-        trayIcon.activated.connect(self.trayActivated)
+        trayIcon.activated.connect(self.onActivated)
         return trayIcon
 
     def _wrapCloseCloseEvent(self):
