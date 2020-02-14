@@ -119,12 +119,14 @@ class AnkiSystemTray():
     def _wrapCloseCloseEvent(self):
         "Override an existing method of an instance of an object"
         def repl(self, event):
-            if not self.closeEventFromAction:
+            if self.closeEventFromAction:
+                # The 'Exit' action in the sys tray context menu was activated
+                AnkiQt.closeEvent(self, event)
+            else:
+                # The main window X button was pressed
                 #self.col.save()
                 self.systemTray.hideAll()
                 event.ignore()
-                return
-            AnkiQt.closeEvent(self, event)
         return MethodType(repl, self.mw)
 
 
