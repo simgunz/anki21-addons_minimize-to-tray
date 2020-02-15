@@ -22,6 +22,7 @@ class AnkiSystemTray:
     def __init__(self, mw):
         """Create a system tray with the Anki icon."""
         self.mw = mw
+        self.isAnkiFocused = True
         self.isMinimizedToTray = False
         self.lastFocusedWidget = mw
         self.explicitlyHiddenWindows = []
