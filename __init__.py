@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Copyright: Simone Gaiarin <simgunz@gmail.com>
 # License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 # Name: Minimize to Tray 2
@@ -11,24 +11,25 @@ from types import MethodType
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtWidgets import QWidget, QApplication, QMenu, QSystemTrayIcon
+from PyQt5.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from anki import hooks
-from aqt import mw              # mw is the INSTANCE of the main window
+from aqt import mw  # mw is the INSTANCE of the main window
 from aqt.main import AnkiQt
 
 
-class AnkiSystemTray():
+class AnkiSystemTray:
     def __init__(self, mw):
         """Create a system tray with the Anki icon."""
         self.mw = mw
-        self.anki_visible = True
-        self.last_focus = mw
+        self.isAnkiVisible = True
+        self.lastFocusedWidget = mw
+        self.explicitlyHiddenWindows = []
         self.trayIcon = self._createTrayIcon()
         self._configureMw()
         self.trayIcon.show()
         config = self.mw.addonManager.getConfig(__name__)
-        if config['hide_on_startup']:
+        if config["hide_on_startup"]:
             self.hideAll()
 
     def _configureMw(self):
@@ -41,52 +42,52 @@ class AnkiSystemTray():
         self.mw.closeEvent = self._wrapCloseCloseEvent()
 
     def onActivated(self, reason):
-        """Show/hide all Anki windows when the tray icon is clicked
-        """
+        """Show/hide all Anki windows when the tray icon is clicked."""
         if reason == QSystemTrayIcon.Trigger:
 
-            if self.anki_visible and self.hasFocus \
-                and all(w.windowState() != Qt.WindowMinimized
-                        for w in self._visibleWindows()):
+            if (
+                self.isAnkiVisible
+                and self.isAnkiFocused
+                and all(
+                    w.windowState() != Qt.WindowMinimized
+                    for w in self._visibleWindows()
+                )
+            ):
                 self.hideAll()
             else:
                 self.showAll()
 
     def onFocusChanged(self, old, now):
-        """Keep track of the focused window in order to refocus it on showAll
-        """
-        self.hasFocus = now is not None
-        if self.hasFocus:
-            self.last_focus = now
+        """Keep track of the focused window in order to refocus it on showAll."""
+        self.isAnkiFocused = now is not None
+        if self.isAnkiFocused:
+            self.lastFocusedWidget = now
 
     def onExit(self):
         self.mw.closeEventFromAction = True
         self.mw.close()
 
     def showAll(self):
-        """Show all windows
-        """
-        if self.anki_visible:
+        """Show all windows."""
+        if self.isAnkiVisible:
             self._showWindows(self._visibleWindows())
         else:
-            self._showWindows(self.tray_hidden)
-        self.last_focus.raise_()
-        self.last_focus.activateWindow()
-        self.anki_visible = True
+            self._showWindows(self.explicitlyHiddenWindows)
+        self.lastFocusedWidget.raise_()
+        self.lastFocusedWidget.activateWindow()
+        self.isAnkiVisible = True
 
     def hideAll(self):
-        """Hide all windows
-        """
-        self.tray_hidden = []
-        windows = self._visibleWindows()
-        for w in windows:
+        """Hide all windows."""
+        self.explicitlyHiddenWindows = self._visibleWindows()
+        for w in self.explicitlyHiddenWindows:
             w.hide()
-        self.tray_hidden = windows
-        self.anki_visible = False
+        self.isAnkiVisible = False
 
     def _showWindows(self, windows):
         for w in windows:
             if w.isMinimized() == Qt.WindowMinimized:
+                # Windows that were maximized are not restored maximied unfortunately
                 w.showNormal()
             else:
                 # hide(): hack that solves two problems:
@@ -101,6 +102,10 @@ class AnkiSystemTray():
             w.raise_()
 
     def _visibleWindows(self):
+        """Return the windows actually visible Anki windows.
+
+        Anki has some hidden windows and menus that we should ignore.
+        """
         windows = []
         for w in QApplication.topLevelWidgets():
             if w.isWindow() and not w.isHidden():
@@ -123,21 +128,23 @@ class AnkiSystemTray():
         return trayIcon
 
     def _wrapCloseCloseEvent(self):
-        "Override an existing method of an instance of an object"
+        """Override the close method of the mw instance."""
+
         def repl(self, event):
             if self.closeEventFromAction:
                 # The 'Exit' action in the sys tray context menu was activated
                 AnkiQt.closeEvent(self, event)
             else:
                 # The main window X button was pressed
-                #self.col.save()
+                # self.col.save()
                 self.systemTray.hideAll()
                 event.ignore()
+
         return MethodType(repl, self.mw)
 
 
 def minimizeToTrayInit():
-    if hasattr(mw, 'trayIcon'):
+    if hasattr(mw, "trayIcon"):
         return
     mw.systemTray = AnkiSystemTray(mw)
 
