@@ -1,0 +1,42 @@
+Adds an icon to the system tray and allows minimizing anki to the tray when the icon is pressed or when the main window X button is pressed.
+
+<b>Configuration</b>
+To start Anki minimized in the tray
+
+Anki 2:
+Tools &gt; Add Ons &gt; MinimizeTotray2 &gt; Edit... and change the value of the variable <code>HIDE_ON_STARTUP</code> to <code>True</code>
+
+Anki 2.1:
+Tools &gt; Add-ons &gt; Minimize to tray &gt; Config and set the variable <code>hide_on_startup</code> to <code>true</code>
+
+<b>Changelog</b>
+Anki 2.1:
+v1.2 (15/02/2020) Clicking on the tray icon focus/un-minimize Anki windows when they are not already focused. (Experimental feature. The windows may flicker in some rare cases)
+v1.1 (19/12/2018) Add action "Show all windows" (contribution of a-rodin)
+v1.0 (12/07/2018) Initial release
+
+Anki 2:
+v0.4 (12/07/2018) Rename to 'MinimizeToTray'
+v0.3 (30/08/2014) Fix behavior on shutdown, to prevent data loss (thanks to Adriano Bedeschi)
+v0.2 (14/12/2012) Fix multiple trays bug, Add minimize on startup feature
+v0.1 (9/11/2012) Initial release
+
+<b>Known issues</b>
+In the Anki 2.1 version when <code>hide_on_startup</code> is set to <code>True</code>, the tray icon does not appear if the profile manager is shown when Anki is started. So this option should be activated only when a single user is present or when Anki is started with the <code>-b PROFILE</code> option so that the profile manager is not displayed.
+
+<b>Issues</b>
+Report any bug in the <a href="https://github.com/simgunz/anki21-addons_minimize-to-tray/issues" rel="nofollow">GitHub issues page</a> of the project. 
+The Anki 2 version is unsupported.
+
+Comments on this page like "It doesn't work" are completely unuseful. Please fill a bug report on github (preferably) or clearly explain the problem and paste the error messages in the comment.
+
+<b>Author</b>
+Simone Gaiarin (simgunz AT gmaill DOT com)
+
+<b>License</b>
+Software distributed under the GNU General Public License version 3 (GNU GPL v3).
+<a href="http://www.gnu.org/copyleft/gpl.html" rel="nofollow">http://www.gnu.org/copyleft/gpl.html</a>
+
+<b>References</b>
+<a href="https://github.com/simgunz/anki-addons_minimize-to-tray" rel="nofollow">Github page (Anki 2)</a>
+<a href="https://github.com/simgunz/anki21-addons_minimize-to-tray" rel="nofollow">Github page (Anki 2.1)</a>
