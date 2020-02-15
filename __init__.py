@@ -50,12 +50,17 @@ class AnkiSystemTray():
         """Show/hide all Anki windows when the tray icon is clicked
         """
         if reason == QSystemTrayIcon.Trigger:
-            self.showAll()
+            isMwMinimized = self.mw.windowState() == Qt.WindowMinimized
+            if self.anki_visible and not isMwMinimized and self.hasFocus:
+                self.hideAll()
+            else:
+                self.showAll()
 
     def onFocusChanged(self, old, now):
         """Keep track of the focused window in order to refocus it on showAll
         """
-        if now is not None:
+        self.hasFocus = now is not None
+        if self.hasFocus:
             self.last_focus = now
 
     def onExit(self):
