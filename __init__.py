@@ -70,8 +70,8 @@ class AnkiSystemTray():
             self._showWindows(self._visibleWindows())
         else:
             self._showWindows(self.tray_hidden)
-        self.last_focus.activateWindow()
         self.last_focus.raise_()
+        self.last_focus.activateWindow()
         self.anki_visible = True
 
     def hideAll(self):
@@ -86,13 +86,19 @@ class AnkiSystemTray():
 
     def _showWindows(self, windows):
         for w in windows:
-            if w.isWindow():
-                if w.isMinimized() == Qt.WindowMinimized:
-                    w.showNormal()
-                else:
-                    w.show()
-                w.raise_()
-                w.activateWindow()
+            if w.isMinimized() == Qt.WindowMinimized:
+                w.showNormal()
+            else:
+                # hide(): hack that solves two problems:
+                # 1. focus the windows after TWO other non-Anki windows
+                # gained focus (Qt bug?). Causes a minor flicker when the
+                # Anki windows are already visible.
+                # 2. allows avoiding to call activateWindow() on each
+                # windows in order to raise them above non-Anki windows
+                # and thus avoid breaking the restore-last-focus mechanism
+                w.hide()
+                w.show()
+            w.raise_()
 
     def _visibleWindows(self):
         windows = []
