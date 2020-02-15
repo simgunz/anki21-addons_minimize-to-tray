@@ -32,15 +32,6 @@ class AnkiSystemTray:
         if config["hide_on_startup"]:
             self.hideAll()
 
-    def _configureMw(self):
-        self.mw.closeEventFromAction = False
-        self.mw.app.focusChanged.connect(self.onFocusChanged)
-        # Disconnecting from close may have some side effects
-        # (e.g. QApplication::lastWindowClosed() signal not emitted)
-        self.mw.form.actionExit.triggered.disconnect(self.mw.close)
-        self.mw.form.actionExit.triggered.connect(self.onExit)
-        self.mw.closeEvent = self._wrapCloseCloseEvent()
-
     def onActivated(self, reason):
         """Show/hide all Anki windows when the tray icon is clicked."""
         if reason == QSystemTrayIcon.Trigger:
@@ -128,6 +119,15 @@ class AnkiSystemTray:
         trayMenu.addAction(self.mw.form.actionExit)
         trayIcon.activated.connect(self.onActivated)
         return trayIcon
+
+    def _configureMw(self):
+        self.mw.closeEventFromAction = False
+        self.mw.app.focusChanged.connect(self.onFocusChanged)
+        # Disconnecting from close may have some side effects
+        # (e.g. QApplication::lastWindowClosed() signal not emitted)
+        self.mw.form.actionExit.triggered.disconnect(self.mw.close)
+        self.mw.form.actionExit.triggered.connect(self.onExit)
+        self.mw.closeEvent = self._wrapCloseCloseEvent()
 
     def _wrapCloseCloseEvent(self):
         """Override the close method of the mw instance."""
