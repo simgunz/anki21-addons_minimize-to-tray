@@ -8,20 +8,14 @@
 # Report any problem in the github issues section
 
 from types import MethodType
-from typing import NamedTuple
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QWidget, QApplication, QMenu, QSystemTrayIcon
 
 from anki import hooks
-from aqt import mw              #mw is the INSTANCE of the main window (aqt/main.py) create in aqt/__init__
+from aqt import mw              # mw is the INSTANCE of the main window
 from aqt.main import AnkiQt
-
-
-class Window(NamedTuple):
-    obj: QWidget
-    state: Qt.WindowState
 
 
 class AnkiSystemTray():
@@ -50,8 +44,10 @@ class AnkiSystemTray():
         """Show/hide all Anki windows when the tray icon is clicked
         """
         if reason == QSystemTrayIcon.Trigger:
-            isMwMinimized = self.mw.windowState() == Qt.WindowMinimized
-            if self.anki_visible and not isMwMinimized and self.hasFocus:
+
+            if self.anki_visible and self.hasFocus \
+                and all(w.windowState() != Qt.WindowMinimized
+                        for w in self._visibleWindows()):
                 self.hideAll()
             else:
                 self.showAll()
@@ -84,19 +80,19 @@ class AnkiSystemTray():
         self.tray_hidden = []
         windows = self._visibleWindows()
         for w in windows:
-            w.obj.hide()
+            w.hide()
         self.tray_hidden = windows
         self.anki_visible = False
 
     def _showWindows(self, windows):
         for w in windows:
-            if w.obj.isWindow():
-                if w.state == Qt.WindowMinimized:
-                    w.obj.showNormal()
+            if w.isWindow():
+                if w.isMinimized() == Qt.WindowMinimized:
+                    w.showNormal()
                 else:
-                    w.obj.show()
-                    w.obj.setWindowState(w.state)
-                w.obj.raise_()
+                    w.show()
+                w.raise_()
+                w.activateWindow()
 
     def _visibleWindows(self):
         windows = []
@@ -104,8 +100,7 @@ class AnkiSystemTray():
             if w.isWindow() and not w.isHidden():
                 if not w.children():
                     continue
-                statefulWindow = Window(w, w.windowState())
-                windows.append(statefulWindow)
+                windows.append(w)
         return windows
 
     def _createTrayIcon(self):
