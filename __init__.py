@@ -22,7 +22,7 @@ class AnkiSystemTray:
     def __init__(self, mw):
         """Create a system tray with the Anki icon."""
         self.mw = mw
-        self.isAnkiVisible = True
+        self.isMinimizedToTray = False
         self.lastFocusedWidget = mw
         self.explicitlyHiddenWindows = []
         self.trayIcon = self._createTrayIcon()
@@ -46,12 +46,9 @@ class AnkiSystemTray:
         if reason == QSystemTrayIcon.Trigger:
 
             if (
-                self.isAnkiVisible
-                and self.isAnkiFocused
-                and all(
-                    w.windowState() != Qt.WindowMinimized
-                    for w in self._visibleWindows()
-                )
+                self.isAnkiFocused
+                and not self.isMinimizedToTray
+                and not self._anyWindowMinimized()
             ):
                 self.hideAll()
             else:
@@ -69,20 +66,20 @@ class AnkiSystemTray:
 
     def showAll(self):
         """Show all windows."""
-        if self.isAnkiVisible:
-            self._showWindows(self._visibleWindows())
-        else:
+        if self.isMinimizedToTray:
             self._showWindows(self.explicitlyHiddenWindows)
+        else:
+            self._showWindows(self._visibleWindows())
         self.lastFocusedWidget.raise_()
         self.lastFocusedWidget.activateWindow()
-        self.isAnkiVisible = True
+        self.isMinimizedToTray = False
 
     def hideAll(self):
         """Hide all windows."""
         self.explicitlyHiddenWindows = self._visibleWindows()
         for w in self.explicitlyHiddenWindows:
             w.hide()
-        self.isAnkiVisible = False
+        self.isMinimizedToTray = True
 
     def _showWindows(self, windows):
         for w in windows:
@@ -113,6 +110,11 @@ class AnkiSystemTray:
                     continue
                 windows.append(w)
         return windows
+
+    def _anyWindowMinimized(self):
+        return any(
+            w.windowState() == Qt.WindowMinimized for w in self._visibleWindows()
+        )
 
     def _createTrayIcon(self):
         trayIcon = QSystemTrayIcon(self.mw)
