@@ -13,8 +13,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
-from anki import hooks
-from aqt import mw  # mw is the INSTANCE of the main window
+from aqt import gui_hooks, mw  # mw is the INSTANCE of the main window
 from aqt.main import AnkiQt
 
 
@@ -152,4 +151,4 @@ def minimizeToTrayInit():
     mw.systemTray = AnkiSystemTray(mw)
 
 
-hooks.addHook("profileLoaded", minimizeToTrayInit)
+gui_hooks.main_window_did_init.append(minimizeToTrayInit)
