@@ -9,6 +9,7 @@
 
 from types import MethodType
 
+import sip
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QApplication, QMenu, QSystemTrayIcon
@@ -61,8 +62,9 @@ class AnkiSystemTray:
             self._showWindows(self.explicitlyHiddenWindows)
         else:
             self._showWindows(self._visibleWindows())
-        self.lastFocusedWidget.raise_()
-        self.lastFocusedWidget.activateWindow()
+        if not sip.isdeleted(self.lastFocusedWidget):
+            self.lastFocusedWidget.raise_()
+            self.lastFocusedWidget.activateWindow()
         self.isMinimizedToTray = False
 
     def hideAll(self):
