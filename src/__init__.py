@@ -6,7 +6,7 @@
 # Description: Minimize anki to tray when the X button is pressed (Anki 2 version)
 # Homepage: https://github.com/simgunz/anki-plugins
 # Report any problem in the github issues section
-
+import sys
 from types import MethodType
 
 import sip
@@ -39,7 +39,7 @@ class AnkiSystemTray:
         if reason == QSystemTrayIcon.Trigger:
 
             if (
-                self.isAnkiFocused
+                (self.isAnkiFocused and not sys.platform.startswith("win32"))
                 and not self.isMinimizedToTray
                 and not self._anyWindowMinimized()
             ):
