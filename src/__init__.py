@@ -35,17 +35,28 @@ class AnkiSystemTray:
             self.hideAll()
 
     def onActivated(self, reason):
-        """Show/hide all Anki windows when the tray icon is clicked."""
-        if reason == QSystemTrayIcon.Trigger:
+        """Show/hide all Anki windows when the tray icon is clicked.
 
+        The windows are shown if:
+        - anki window is not in focus
+        - any window is minimized
+        - anki is minimize to tray
+        The windows are hidden otherwise.
+
+        The focus cannot be detected given that the main window focus is lost before this
+        slot is activated. For this reason and to prevent that anki is minimized when not
+        focused, on Windows are the windows are never hidden.
+        """
+        if reason == QSystemTrayIcon.Trigger:
             if (
-                (self.isAnkiFocused and not sys.platform.startswith("win32"))
-                and not self.isMinimizedToTray
-                and not self._anyWindowMinimized()
+                not self.isAnkiFocused
+                or self._anyWindowMinimized()
+                or self.isMinimizedToTray
             ):
-                self.hideAll()
-            else:
                 self.showAll()
+            else:
+                if not sys.platform.startswith("win32"):
+                    self.hideAll()
 
     def onFocusChanged(self, old, now):
         """Keep track of the focused window in order to refocus it on showAll."""
