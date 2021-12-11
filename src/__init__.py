@@ -27,6 +27,7 @@ class AnkiSystemTray:
         self.lastFocusedWidget = mw
         self.explicitlyHiddenWindows = []
         self.trayIcon = self._createTrayIcon()
+        QApplication.setQuitOnLastWindowClosed(False)
         self._configureMw()
         self.trayIcon.show()
         config = self.mw.addonManager.getConfig(__name__)
