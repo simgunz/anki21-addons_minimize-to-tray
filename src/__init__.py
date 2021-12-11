@@ -22,6 +22,7 @@ class AnkiSystemTray:
     def __init__(self, mw):
         """Create a system tray with the Anki icon."""
         self.mw = mw
+        self.isAnkiFocused = True
         self.isMinimizedToTray = False
         self.lastFocusedWidget = mw
         self.explicitlyHiddenWindows = []
@@ -36,14 +37,20 @@ class AnkiSystemTray:
     def onActivated(self, reason):
         """Show/hide all Anki windows when the tray icon is clicked."""
         if reason == QSystemTrayIcon.Trigger:
-            if not (self.isMinimizedToTray or self._anyWindowMinimized()):
+
+            if (
+                self.isAnkiFocused
+                and not self.isMinimizedToTray
+                and not self._anyWindowMinimized()
+            ):
                 self.hideAll()
             else:
                 self.showAll()
 
     def onFocusChanged(self, old, now):
         """Keep track of the focused window in order to refocus it on showAll."""
-        if now is not None:
+        self.isAnkiFocused = now is not None
+        if self.isAnkiFocused:
             self.lastFocusedWidget = now
 
     def onExit(self):
