@@ -124,7 +124,7 @@ class AnkiSystemTray:
     def _createTrayIcon(self):
         trayIcon = QSystemTrayIcon(self.mw)
         ankiLogo = QIcon()
-        ankiLogo.addPixmap(QPixmap(":/icons/anki.png"), QIcon.Normal, QIcon.Off)
+        ankiLogo.addPixmap(QPixmap("icons:anki.png"), QIcon.Normal, QIcon.Off)
         trayIcon.setIcon(QIcon.fromTheme("anki", ankiLogo))
         trayMenu = QMenu(self.mw)
         trayIcon.setContextMenu(trayMenu)
