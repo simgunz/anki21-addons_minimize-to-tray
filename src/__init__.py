@@ -9,10 +9,7 @@
 import sys
 from types import MethodType
 
-import sip
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtWidgets import QApplication, QMenu, QSystemTrayIcon
+from aqt.qt import sip, Qt, QIcon, QPixmap, QApplication, QMenu, QSystemTrayIcon
 
 from aqt import gui_hooks, mw  # mw is the INSTANCE of the main window
 from aqt.main import AnkiQt
@@ -47,7 +44,7 @@ class AnkiSystemTray:
         slot is activated. For this reason and to prevent that anki is minimized when not
         focused, on Windows are the windows are never hidden.
         """
-        if reason == QSystemTrayIcon.Trigger:
+        if reason == QSystemTrayIcon.ActivationReason.Trigger:
             if (
                 not self.isAnkiFocused
                 or self._anyWindowMinimized()
@@ -88,7 +85,7 @@ class AnkiSystemTray:
 
     def _showWindows(self, windows):
         for w in windows:
-            if w.isMinimized() == Qt.WindowMinimized:
+            if w.isMinimized() == Qt.WindowState.WindowMinimized:
                 # Windows that were maximized are not restored maximied unfortunately
                 w.showNormal()
             else:
@@ -118,13 +115,13 @@ class AnkiSystemTray:
 
     def _anyWindowMinimized(self):
         return any(
-            w.windowState() == Qt.WindowMinimized for w in self._visibleWindows()
+            w.windowState() == Qt.WindowState.WindowMinimized for w in self._visibleWindows()
         )
 
     def _createTrayIcon(self):
         trayIcon = QSystemTrayIcon(self.mw)
         ankiLogo = QIcon()
-        ankiLogo.addPixmap(QPixmap("icons:anki.png"), QIcon.Normal, QIcon.Off)
+        ankiLogo.addPixmap(QPixmap("icons:anki.png"), QIcon.Mode.Normal, QIcon.State.Off)
         trayIcon.setIcon(QIcon.fromTheme("anki", ankiLogo))
         trayMenu = QMenu(self.mw)
         trayIcon.setContextMenu(trayMenu)
