@@ -51,9 +51,8 @@ class AnkiSystemTray:
                 or self.isMinimizedToTray
             ):
                 self.showAll()
-            else:
-                if not sys.platform.startswith("win32"):
-                    self.hideAll()
+            elif not sys.platform.startswith("win32"):
+                self.hideAll()
 
     def onFocusChanged(self, old, now):
         """Keep track of the focused window in order to refocus it on showAll."""
@@ -115,13 +114,16 @@ class AnkiSystemTray:
 
     def _anyWindowMinimized(self):
         return any(
-            w.windowState() == Qt.WindowState.WindowMinimized for w in self._visibleWindows()
+            w.windowState() == Qt.WindowState.WindowMinimized
+            for w in self._visibleWindows()
         )
 
     def _createTrayIcon(self):
         trayIcon = QSystemTrayIcon(self.mw)
         ankiLogo = QIcon()
-        ankiLogo.addPixmap(QPixmap("icons:anki.png"), QIcon.Mode.Normal, QIcon.State.Off)
+        ankiLogo.addPixmap(
+            QPixmap("icons:anki.png"), QIcon.Mode.Normal, QIcon.State.Off
+        )
         trayIcon.setIcon(QIcon.fromTheme("anki", ankiLogo))
         trayMenu = QMenu(self.mw)
         trayIcon.setContextMenu(trayMenu)
