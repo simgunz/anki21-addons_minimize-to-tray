@@ -84,6 +84,8 @@ class AnkiSystemTray:
 
     def _showWindows(self, windows):
         for w in windows:
+            if sip.isdeleted(w):
+                continue
             if w.isMinimized() == Qt.WindowState.WindowMinimized:
                 # Windows that were maximized are not restored maximied unfortunately
                 w.showNormal()
