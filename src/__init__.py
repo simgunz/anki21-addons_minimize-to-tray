@@ -101,8 +101,10 @@ class AnkiSystemTray:
     def onAppMsg(self, buf):
         """Show the windows when Anki is launched again while minimized to tray.
 
-        Anki only raises the main window on a new launch, which has no effect on a
-        hidden window.
+        Workaround for Flatpak without access to org.kde.StatusNotifierWatcher: the
+        add-on's tray icon cannot register, so Plasma shows a background app icon that
+        launches Anki again when clicked. Anki only raises the main window on a new
+        launch, which has no effect on a hidden window.
         """
         self._debug_print(
             f"App message received: {buf}, isMinimizedToTray={self.isMinimizedToTray}"
