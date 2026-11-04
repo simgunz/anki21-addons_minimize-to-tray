@@ -98,6 +98,18 @@ class AnkiSystemTray:
         self.mw.closeEventFromAction = True
         self.mw.close()
 
+    def onAppMsg(self, buf):
+        """Show the windows when Anki is launched again while minimized to tray.
+
+        Anki only raises the main window on a new launch, which has no effect on a
+        hidden window.
+        """
+        self._debug_print(
+            f"App message received: {buf}, isMinimizedToTray={self.isMinimizedToTray}"
+        )
+        if self.isMinimizedToTray:
+            self.showAll()
+
     def showAll(self):
         """Show all windows."""
         self._debug_print(
@@ -288,6 +300,7 @@ class AnkiSystemTray:
 
         self.mw.closeEventFromAction = False
         self.mw.app.focusChanged.connect(self.onFocusChanged)
+        self.mw.app.appMsg.connect(self.onAppMsg)
 
         self._debug_print("Disconnecting and reconnecting exit action")
         # Disconnecting from close may have some side effects
