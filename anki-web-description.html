@@ -6,6 +6,10 @@ To start Anki minimized in the tray go to
 
 To enable debug mode (for troubleshooting), set the variable <code>debug</code> to <code>true</code> in the same config menu. Debug messages will be printed to the console.
 
+<b>Flatpak</b><br>
+The Flatpak version of Anki has no access to the system tray, so the add-on works with some limits: the tray icon only appears while Anki is hidden, and clicking it can only open Anki. To get the full tray icon, run this command in a terminal and restart Anki:
+<code>flatpak override --user --talk-name=org.kde.StatusNotifierWatcher net.ankiweb.Anki</code>
+
 <b>Changelog</b><br>
 2.1.0 (16/11/2025) Fix closed dialogs reappearing after restore from tray. Add debug mode with comprehensive logging.<br>
 2.0.1 (18/12/2024) Attempt to fix crash happening when windows are deleted<br>
