@@ -7,12 +7,35 @@
 # Homepage: https://github.com/simgunz/anki-plugins
 # Report any problem in the github issues section
 import sys
+from pathlib import Path
 from types import MethodType
 
-from aqt.qt import sip, Qt, QIcon, QPixmap, QApplication, QMenu, QSystemTrayIcon
+from aqt.qt import (
+    sip,
+    Qt,
+    QIcon,
+    QPixmap,
+    QApplication,
+    QCheckBox,
+    QMenu,
+    QMessageBox,
+    QSystemTrayIcon,
+)
 
 from aqt import gui_hooks, mw  # mw is the INSTANCE of the main window
 from aqt.main import AnkiQt
+
+FLATPAK_TRAY_WARNING = """\
+<p>You installed Anki as a Flatpak, so Minimize to tray works with some limits:</p>
+<ul>
+<li>The tray icon only appears while Anki is hidden, and goes away when Anki is open.</li>
+<li>To hide Anki, close its window. Clicking the tray icon can only open Anki.</li>
+<li>If you don't see a tray icon, open Anki from your applications menu to bring it back.</li>
+<li>To quit, open Anki and use File > Exit. Quit in the tray icon's menu force-closes Anki.</li>
+</ul>
+<p>To get the full tray icon, run this command in a terminal and restart Anki:</p>
+<p><code>flatpak override --user --talk-name=org.kde.StatusNotifierWatcher net.ankiweb.Anki</code></p>
+"""
 
 
 class AnkiSystemTray:
@@ -45,6 +68,8 @@ class AnkiSystemTray:
         self._debug_print(
             f"Configuration: hide_on_startup={config.get('hide_on_startup', False)}, debug={self.debug}"
         )
+
+        self._warnIfFlatpakTrayUnavailable(config)
 
         if config["hide_on_startup"]:
             self._debug_print("Hiding all windows on startup")
@@ -97,6 +122,20 @@ class AnkiSystemTray:
         self._debug_print("Exit action triggered")
         self.mw.closeEventFromAction = True
         self.mw.close()
+
+    def onAppMsg(self, buf):
+        """Show the windows when Anki is launched again while minimized to tray.
+
+        Workaround for Flatpak without access to org.kde.StatusNotifierWatcher: the
+        add-on's tray icon cannot register, so Plasma shows a background app icon that
+        launches Anki again when clicked. Anki only raises the main window on a new
+        launch, which has no effect on a hidden window.
+        """
+        self._debug_print(
+            f"App message received: {buf}, isMinimizedToTray={self.isMinimizedToTray}"
+        )
+        if self.isMinimizedToTray:
+            self.showAll()
 
     def showAll(self):
         """Show all windows."""
@@ -262,6 +301,32 @@ class AnkiSystemTray:
                 )
                 w.show()
 
+    def _warnIfFlatpakTrayUnavailable(self, config):
+        """Explain the Flatpak tray limits until the user dismisses the warning."""
+        isFlatpak = Path("/.flatpak-info").exists()
+        isTrayAvailable = QSystemTrayIcon.isSystemTrayAvailable()
+        isDismissed = config.get("flatpak_tray_warning_dismissed", False)
+        self._debug_print(
+            f"Flatpak tray check: isFlatpak={isFlatpak}, isTrayAvailable={isTrayAvailable}, isDismissed={isDismissed}"
+        )
+
+        if not isFlatpak or isTrayAvailable or isDismissed:
+            return
+
+        messageBox = QMessageBox(self.mw)
+        messageBox.setIcon(QMessageBox.Icon.Warning)
+        messageBox.setWindowTitle("Minimize to tray")
+        messageBox.setTextFormat(Qt.TextFormat.RichText)
+        messageBox.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        messageBox.setText(FLATPAK_TRAY_WARNING)
+        dontShowAgain = QCheckBox("Don't show this again")
+        messageBox.setCheckBox(dontShowAgain)
+        messageBox.exec()
+
+        if dontShowAgain.isChecked():
+            config["flatpak_tray_warning_dismissed"] = True
+            self.mw.addonManager.writeConfig(__name__, config)
+
     def _createTrayIcon(self):
         self._debug_print("Creating system tray icon")
 
@@ -288,6 +353,7 @@ class AnkiSystemTray:
 
         self.mw.closeEventFromAction = False
         self.mw.app.focusChanged.connect(self.onFocusChanged)
+        self.mw.app.appMsg.connect(self.onAppMsg)
 
         self._debug_print("Disconnecting and reconnecting exit action")
         # Disconnecting from close may have some side effects
